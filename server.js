@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const devuser = require("./devusermodel");
 const middleware = require("./middleware");
-const reviewmodel = require("./reviewmodel")
+const reviewmodel = require("./reviewmodel");
+const cors = require('cors');
 const jwt = require("jsonwebtoken");
 const app = express();
 
@@ -14,7 +15,7 @@ mongoose
   .then(() => console.log("DB Connected"));
 
 app.use(express.json());
-
+app.use(cors({origin:'*'}));
 app.get("/", (req, res) => {
   return res.send("Helow World !!");
 });
@@ -93,18 +94,31 @@ app.get("/myprofile", middleware, async (req, res) => {
 
 app.post("/addreview", middleware, async (req, res) => {
   try {
-    const {taskprovider, rating} = req.body;
+    const { taskworker, rating } = req.body;
     const exist = await devuser.findById(req.user.id);
-    const newReview = new UserReview({
-      taskprovider:exist.fullname,
-      taskworker,rating
-    })
+    const newReview = new reviewmodel({
+      taskprovider: exist.fullname,
+      taskworker,
+      rating,
+    });
     newReview.save();
-    return res.status(200).send('Review updated Succesfuly')
-
+    return res.status(200).send("Review updated Succesfuly");
   } catch (err) {
     console.log(err);
     return res.status(400).send("Server Error");
+  }
+});
+
+app.get("/myreview", middleware, async (req, res) => {
+  try {
+    let allreviews = await reviewmodel.find();
+    let myreviews = allreviews.filter(
+      (review) => review.taskworker.toString() === req.user.id.toString()
+    );
+    return res.status(200).json(myreviews);
+  } catch (err) {
+    console.log(err);
+    return res.status(500).send("Server Error");
   }
 });
 
