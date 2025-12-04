@@ -1,2 +1,2 @@
 # developer_hub
-MERN_Projecct
+MERN_Project 
